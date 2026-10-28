@@ -43,7 +43,8 @@ describe('skill install lock', () => {
       JSON.stringify({ token: 'dead-owner', pid: 2_147_483_647, createdAt: Date.now() })
     )
 
-    const release = await acquireSkillInstallLock({ path: lockPath, timeoutMs: 100 })
+    // Reclaim needs fsync plus a 50ms retry; allow CI load rather than timing out on legacy ENOTDIR.
+    const release = await acquireSkillInstallLock({ path: lockPath, timeoutMs: 5_000 })
     expect((await readPublishedOwner(lockPath)).token).not.toBe('dead-owner')
     await release()
     await expect(readdir(lockPath)).rejects.toMatchObject({ code: 'ENOENT' })

@@ -1,15 +1,4 @@
-/**
- * Decides which inherited ZDOTDIR Orca may treat as the user's real zsh config
- * dir, on the Node side of the launch.
- *
- * Why: Orca used to recognise only its OWN wrapper path shape (a path ending in
- * shell-ready/zsh). Launched from any other terminal that had already
- * hijacked ZDOTDIR, Orca captured that dir as "the user's config" and re-sourced
- * it. Ownership is now established positively — a stamped marker file, or Orca's
- * own dir shape for wrappers written by older builds — and a dir holding no zsh
- * startup file at all is not a config dir whoever wrote it. No vendor is
- * detected by name, because that can never be complete.
- */
+/** Accept real startup-file directories; reject Orca wrappers by their marker or legacy path shape. */
 import { existsSync } from 'node:fs'
 import { ZSH_WRAPPER_DIR_MARKER_FILE } from './shell-templates'
 
@@ -28,7 +17,6 @@ export function isOrcaOwnedZshWrapperDir(dir: string): boolean {
   )
 }
 
-/** The inherited value if it is usable as the user's config dir, else null. */
 function usableInheritedZdotdir(value: string | undefined): string | null {
   if (!value) {
     return null
@@ -43,15 +31,13 @@ function usableInheritedZdotdir(value: string | undefined): string | null {
   return value
 }
 
-export function resolveInheritedZdotdir(env: EnvLike, homeFallback = ''): string {
+/** Keep absent ZDOTDIR absent: assigning HOME would change the environment inherited by child processes. */
+export function resolveInheritedZdotdir(env: EnvLike): string | null {
   return (
-    usableInheritedZdotdir(env.ZDOTDIR) ??
-    usableInheritedZdotdir(env.ORCA_ORIG_ZDOTDIR) ??
-    env.HOME ??
-    homeFallback
+    usableInheritedZdotdir(env.ZDOTDIR) ?? usableInheritedZdotdir(env.ORCA_ORIG_ZDOTDIR) ?? null
   )
 }
 
-export function resolveInheritedZshenvSourceDir(env: EnvLike, homeFallback = ''): string {
-  return usableInheritedZdotdir(env.ZDOTDIR) ?? env.HOME ?? homeFallback
+export function inheritedZdotdirEnv(inherited: string | null): Record<string, string> {
+  return inherited ? { ORCA_ORIG_ZDOTDIR: inherited } : {}
 }

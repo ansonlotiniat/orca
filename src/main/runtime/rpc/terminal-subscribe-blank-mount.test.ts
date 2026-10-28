@@ -1,3 +1,4 @@
+import './unused-default-rpc-methods.test-fixture'
 /** STA-1840 regression: missing mobile terminal models request an exact renderer tab mount. */
 import { describe, expect, it, vi } from 'vitest'
 import { RpcDispatcher } from './dispatcher'
@@ -10,6 +11,7 @@ import type { RuntimeTerminalWait } from '../../../shared/runtime-types'
 function stubRuntime(overrides: Partial<OrcaRuntimeService> = {}): OrcaRuntimeService {
   return {
     getRuntimeId: () => 'test-runtime',
+    subscribeToPtyExit: vi.fn(() => vi.fn()),
     registerRemoteTerminalViewSubscriber: () => () => {},
     requestRendererTerminalTabMount: () => false,
     getRendererTerminalSerializerGenerationForHandle: () => 0,

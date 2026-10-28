@@ -1,3 +1,4 @@
+import './unused-default-rpc-methods.test-fixture'
 import { describe, expect, it, vi } from 'vitest'
 import type { RuntimeTerminalWait } from '../../../shared/runtime-types'
 import type { OrcaRuntimeService } from '../orca-runtime'
@@ -31,6 +32,7 @@ describe('terminal.subscribe reconnect rebind (STA-4510)', () => {
 
     const runtime = {
       getRuntimeId: () => 'test-runtime',
+      subscribeToPtyExit: vi.fn(() => vi.fn()),
       registerRemoteTerminalViewSubscriber: () => () => {},
       requestRendererTerminalTabMount: () => false,
       resolveLeafForHandle: vi.fn().mockReturnValue({ ptyId: 'pty-1' }),

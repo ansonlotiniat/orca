@@ -1,38 +1,6 @@
 // Chinese value overrides from high-visibility UI audit rounds 4–5.
 // Why: keep locale-value-overrides.mjs under max-lines while preserving exact-match repairs.
 export const ZH_VALUE_OVERRIDES = {
-  // Reviewed product glossary; sentence-level legacy forms are normalized only in matching source contexts.
-  Agent: '智能体',
-  Agents: '智能体',
-  agent: '智能体',
-  agents: '智能体',
-  Terminal: '终端',
-  Terminals: '终端',
-  terminal: '终端',
-  terminals: '终端',
-  Repo: '仓库',
-  Repos: '仓库',
-  repo: '仓库',
-  repos: '仓库',
-  Repository: '仓库',
-  Repositories: '仓库',
-  repository: '仓库',
-  repositories: '仓库',
-  Reviews: '评审',
-  reviews: '评审',
-  reviewers: '评审人',
-  Issue: '议题',
-  Issues: '议题',
-  issue: '议题',
-  issues: '议题',
-  Worktree: '工作树',
-  Worktrees: '工作树',
-  worktree: '工作树',
-  worktrees: '工作树',
-  Workspace: '工作区',
-  Workspaces: '工作区',
-  workspace: '工作区',
-  workspaces: '工作区',
   phone: '手机',
   bitbucket: 'Bitbucket',
   ios: 'iOS',
@@ -76,6 +44,8 @@ export const ZH_VALUE_OVERRIDES = {
   'Loading labels': '加载标签',
   // Why: MT rendered the "Pin Tab" action as "引脚标签" (noun reading of "pin"); pair it with 取消固定标签.
   'Pin Tab': '固定标签',
+  // Why: MT read "Duplicate" as the adjective (重复); it is the action, and the menu is already on 选项卡.
+  'Duplicate Tab': '复制选项卡',
   Approved: '已批准',
   Strike: '删除线',
   Bold: '粗体',
@@ -124,8 +94,7 @@ export const ZH_VALUE_OVERRIDES = {
     '仓库操作方案。在此仓库自定义之前，将使用全局设置。',
   'Adds action recipes for Source Control commit, pull request, branch-name, and fix actions.':
     '为源代码管理的提交、拉取请求、分支命名和修复操作添加操作方案。',
-  // Workspace status icon and color swatch labels; siblings below are translated, so English
-  // pins here would leave the picker half-Chinese on the next catalog regeneration.
+  // Picker siblings are translated; English pins here would regenerate half-Chinese UI.
   Play: '播放',
   Flag: '标记',
   Zinc: '锌灰',
@@ -147,11 +116,6 @@ export const ZH_VALUE_OVERRIDES = {
   'Conductor Progress': 'Conductor 进度',
   'Conductor Review': 'Conductor 评审',
   'Conductor Done': 'Conductor 完成',
-  'Agent Session History is not available for this execution host.':
-    '此执行主机不支持智能体会话历史记录。',
-  'Unread agent completion': '有未读的智能体完成通知',
-  'child agents': '子智能体',
-  'No agent available to explain this commit': '没有可用于解释此提交的智能体',
   'Detecting agents...': '正在检测智能体...',
   'Agents spawned': '已启动智能体',
   'floating terminal': '浮动终端',

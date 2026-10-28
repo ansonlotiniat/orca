@@ -1,3 +1,4 @@
+import './unused-default-rpc-methods.test-fixture'
 import { describe, expect, it, vi } from 'vitest'
 import type { RuntimeTerminalWait } from '../../../shared/runtime-types'
 import {
@@ -33,6 +34,7 @@ describe('terminal subscribe renderer recovery output ordering', () => {
       | undefined
     const runtime = {
       getRuntimeId: () => 'test-runtime',
+      subscribeToPtyExit: vi.fn(() => vi.fn()),
       resolveLeafForHandle: vi.fn().mockReturnValue({ ptyId: 'pty-output-race' }),
       hasHeadlessTerminalState: vi.fn(() => false),
       requestRendererTerminalTabMount: vi.fn(() => true),

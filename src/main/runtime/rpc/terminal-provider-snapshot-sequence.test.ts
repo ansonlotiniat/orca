@@ -1,3 +1,4 @@
+import './unused-default-rpc-methods.test-fixture'
 import { expect, it, vi } from 'vitest'
 import { RpcDispatcher } from './dispatcher'
 import type { RpcRequest } from './core'
@@ -33,6 +34,7 @@ it('replays post-capture output in the provider snapshot sequence domain', async
     | undefined
   const runtime = {
     getRuntimeId: () => 'test-runtime',
+    subscribeToPtyExit: vi.fn(() => vi.fn()),
     registerRemoteTerminalViewSubscriber: () => () => {},
     resolveLeafForHandle: vi.fn().mockReturnValue({ ptyId: 'pty-restored' }),
     handleMobileSubscribe: vi.fn().mockResolvedValue(true),
@@ -71,8 +73,7 @@ it('replays post-capture output in the provider snapshot sequence domain', async
 
   await vi.waitFor(() => expect(resolveSnapshot).toBeDefined())
   resolveSnapshot?.({ data: 'restored snapshot', cols: 80, rows: 24, seq: 900 })
-  // Why: provider attach anchoring makes this first new chunk continue at
-  // 905 instead of restarting at 5, so snapshot reconciliation keeps it.
+  // Attach anchoring continues at 905, not 5, so snapshot reconciliation retains the new chunk.
   dataListener?.('fresh', { seq: 905, rawLength: 5 })
 
   await vi.waitFor(() =>
@@ -108,6 +109,7 @@ it('keeps provider-backed alternate-screen resizes geometry-only', async () => {
     .mockResolvedValue({ data: 'restored tui', cols: 80, rows: 24 })
   const runtime = {
     getRuntimeId: () => 'test-runtime',
+    subscribeToPtyExit: vi.fn(() => vi.fn()),
     registerRemoteTerminalViewSubscriber: () => () => {},
     resolveLeafForHandle: vi.fn().mockReturnValue({ ptyId: 'pty-tui' }),
     readTerminal: vi.fn().mockResolvedValue({ tail: [], truncated: false }),

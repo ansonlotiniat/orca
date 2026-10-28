@@ -3,30 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { repairTranslatedValue } from './locale-translation-policy.mjs'
 
 describe('locale-translation-policy zh round 5', () => {
-  it('standardizes the accepted product glossary', () => {
-    const cases = [
-      ['Agent', '代理', '智能体'],
-      ['Terminal', '端子', '终端'],
-      ['Repo', '存储库', '仓库'],
-      ['Review', '审查', '评审'],
-      ['Issue', '问题', '议题'],
-      ['Close as duplicate', '标记为重复', '作为重复议题关闭'],
-      ['Worktree', '工作分支', '工作树'],
-      ['Workspace', '工作空间', '工作区']
-    ]
-
-    for (const [enValue, localeValue, expected] of cases) {
-      expect(
-        repairTranslatedValue({
-          key: 'auto.components.glossary.test',
-          enValue,
-          localeValue,
-          locale: 'zh'
-        })
-      ).toBe(expected)
-    }
-  })
-
   it('fixes brand spacing, hosted review, and Orca Mobile regressions', () => {
     expect(
       repairTranslatedValue({
@@ -229,14 +205,6 @@ describe('locale-translation-policy zh round 5', () => {
     ).toBe('留空以使用系统代理设置和继承的代理环境变量。')
     expect(
       repairTranslatedValue({
-        key: 'auto.components.settings.BrowserProfileRow.b5c0479e21',
-        enValue: 'Unmodified user agent',
-        localeValue: '未经修改的用户代理',
-        locale: 'zh'
-      })
-    ).toBe('未经修改的用户代理')
-    expect(
-      repairTranslatedValue({
         key: 'auto.components.settings.general.search.91a46caafc',
         enValue: 'no_proxy',
         localeValue: '无Agent',
@@ -245,7 +213,24 @@ describe('locale-translation-policy zh round 5', () => {
     ).toBe('no_proxy')
   })
 
-  it('standardizes repository terminology', () => {
+  it.each([
+    ['Configure proxy', '配置代理', '配置代理'],
+    ['Unmodified user agent', '未修改的用户代理', '未修改的用户代理'],
+    [
+      'Installed for {{value0}} agents',
+      '已为 {{value0}} 个代理安装',
+      '已为 {{value0}} 个智能体安装'
+    ],
+    ['Detecting agents...', '检测剂...', '正在检测智能体...'],
+    ['Repository not in Orca', '存储库不在 Orca 中', '仓库不在 Orca 中'],
+    ['Recent Workspaces', '最近的工作空间', '最近的工作区']
+  ])('applies the glossary boundary for %s', (enValue, localeValue, expected) => {
+    expect(
+      repairTranslatedValue({ key: 'auto.glossary.boundary', enValue, localeValue, locale: 'zh' })
+    ).toBe(expected)
+  })
+
+  it('keeps repo terminology in English', () => {
     expect(
       repairTranslatedValue({
         key: 'auto.components.workspace.cleanup.WorkspaceCleanupDialog.0b1766738a',
@@ -253,7 +238,7 @@ describe('locale-translation-policy zh round 5', () => {
         localeValue: '回购协议',
         locale: 'zh'
       })
-    ).toBe('仓库')
+    ).toBe('Repo')
     expect(
       repairTranslatedValue({
         key: 'auto.components.sidebar.add.repo.local.start.actions.fb4fc5380e',

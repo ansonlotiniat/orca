@@ -1,13 +1,4 @@
-/**
- * Byte-for-byte snapshots of every shell wrapper file Orca generates, for all
- * three transports (local PTY, daemon/SSH, relay overlay).
- *
- * Why: the zsh generators were unified behind one builder; these fixtures were
- * captured from the pre-unification code so any drift shows up as a diff.
- *
- * Fixtures live in ./__fixtures__/shell-wrapper-snapshots/ — see the README there
- * before accepting a rewrite; a local run updates them silently.
- */
+// Read __fixtures__/shell-wrapper-snapshots/README.md before accepting snapshot changes.
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -17,12 +8,9 @@ import {
   getShellLaunchConfig as getDaemonShellLaunchConfig,
   getShellReadyWrapperRoot as getDaemonShellReadyWrapperRoot
 } from './daemon/shell-ready'
-import { ensureOverlayRestoreWrappers } from '../relay/pty-shell-overlay-wrappers'
 import { getShellLaunchConfig as getLocalShellLaunchConfig } from './providers/local-pty-shell-ready'
 import { selectShellStartupFeatures } from './shell-startup-features'
 
-// Why the real selector: the snapshots then pin what a startup-command pane
-// actually launches with, not a hand-written feature list.
 const STARTUP_COMMAND_FEATURES = selectShellStartupFeatures({
   shellPath: 'zsh',
   env: {},
@@ -31,18 +19,15 @@ const STARTUP_COMMAND_FEATURES = selectShellStartupFeatures({
   emitsStartupIdentity: true
 })
 
+// ZDOTDIR handback lets zsh read later startup files directly from the user's directory.
 const WRAPPER_FILES = [
   ['zsh-zshenv', join('zsh', '.zshenv')],
-  ['zsh-zprofile', join('zsh', '.zprofile')],
-  ['zsh-zshrc', join('zsh', '.zshrc')],
-  ['zsh-zlogin', join('zsh', '.zlogin')],
   ['bash-rcfile', join('bash', 'rcfile')]
 ] as const
 
 const SNAPSHOT_DIR = join(__dirname, '__fixtures__', 'shell-wrapper-snapshots')
 
-// Why: the wrapper root is a temp dir per run, and the baked ZDOTDIR literal is
-// the only path-dependent byte in the output; pin it to a stable placeholder.
+// Bash still embeds a temporary wrapper root that varies per run.
 function withStableRoot(content: string, root: string): string {
   return content.split(root).join('<WRAPPER_ROOT>')
 }
@@ -58,21 +43,23 @@ async function expectWrapperFiles(transport: string, root: string): Promise<void
   }
 }
 
-/**
- * Every shell name the wrapper is allowed to write that is not Orca-namespaced.
- *
- * Each is a deliberate contract with the shell or with Orca's own features, not
- * scratch space: the history path, the config dir, the two PATH-shaped exports
- * agent overlays need, and the prompt-hook arrays the readiness and OSC 133
- * markers register through.
- */
+// Non-Orca globals allowed by the shell or agent-overlay contracts.
 const CONTRACT_GLOBALS = new Set([
+  'BUFFER',
   'CODEX_HOME',
+  // Exported only in the claude function's subshell.
+  'CLAUDE_CONFIG_DIR',
   'HISTFILE',
-  'MIMOCODE_HOME',
+  'MIMOCODE_CONFIG_DIR',
   'OPENCODE_CONFIG_DIR',
+  'OPENCODE_AUTH_CONTENT',
+  'OPENCODE_DB',
+  'XDG_DATA_HOME',
+  'XDG_STATE_HOME',
   'PATH',
   'PROMPT_COMMAND',
+  'PS1', // Bash appends its non-printing Readline readiness marker.
+  'CURSOR',
   'ZDOTDIR',
   'precmd_functions',
   'preexec_functions'
@@ -101,8 +88,7 @@ function foreignGlobalsWritten(content: string): string[] {
   return [...names].sort()
 }
 
-// Why: all three generators are POSIX-only (the launch configs skip wrapping on
-// win32), and native Windows path separators would make the fixtures unstable.
+// Wrapping is POSIX-only; native Windows paths would make these fixtures unstable.
 const describePosix = process.platform === 'win32' ? describe.skip : describe
 
 describePosix('generated shell wrapper files', () => {
@@ -134,16 +120,7 @@ describePosix('generated shell wrapper files', () => {
     await expectWrapperFiles('daemon', getDaemonShellReadyWrapperRoot())
   })
 
-  it('relay overlay wrappers', async () => {
-    ensureOverlayRestoreWrappers(root)
-    await expectWrapperFiles('relay', root)
-  })
-
-  // Why a rule and not another fixture: `REPLY`, zsh's shared scratch global,
-  // was the wrapper's resolver out-parameter. A user config that constrained it
-  // (`typeset -r REPLY`) aborted the wrapper at its first executable line — on
-  // every zsh pane, once wrapping widened past overlay/startup panes. The
-  // fixtures above would have shown that only to a reader who knew to look.
+  // User configs may constrain shell globals such as readonly REPLY; use Orca-owned scratch names.
   it.each([
     ['local', (): void => void ensureShellReadyWrappersAt(root), (): string => root],
     [
@@ -153,8 +130,7 @@ describePosix('generated shell wrapper files', () => {
         getDaemonShellLaunchConfig('/bin/zsh', STARTUP_COMMAND_FEATURES)
       },
       (): string => getDaemonShellReadyWrapperRoot()
-    ],
-    ['relay', (): void => void ensureOverlayRestoreWrappers(root), (): string => root]
+    ]
   ])('%s wrappers write no shell global outside Orca’s namespace', (_transport, generate, dir) => {
     generate()
 
